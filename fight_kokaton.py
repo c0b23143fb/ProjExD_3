@@ -7,6 +7,7 @@ import pygame as pg
 
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
+NUM_OF_BOMBS = 5 #爆弾の個数
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -149,6 +150,7 @@ def main():
     #スペースが押されるまではNone
     beam = None #__init__のselfを無視した引数を書く #ビームインスタンス生成(ビームが一つ完成)
     #bomb2 = Bomb((0, 0, 255), 20) #これだけでボブが増やせる
+    bombs = [Bomb((255, 0, 0), 10) for i in range(NUM_OF_BOMBS)] #ボムのリストが5個並ぶ
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -162,7 +164,7 @@ def main():
         screen.blit(bg_img, [0, 0])
         
         #衝突判定
-        if bomb is not None:
+        for bomb in bombs: #1つでもぶつかったらゲームオーバー
             if bird.rct.colliderect(bomb.rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
                 bird.change_img(8, screen)
@@ -174,17 +176,20 @@ def main():
                 time.sleep(1)
                 return
         
-        if beam is not None:
-            if beam.rct.colliderect(bomb.rct): #ビームが爆弾を撃ち落としたら
-                beam = None
-                bomb = None
-                bird.change_img(6, screen) #ビームが当たるとこうかとんが喜ぶ
-                pg.display.update()
+        #ビームで撃ち落とされると一部がNoneになったリストになる
+        for i, bomb in enumerate(bombs): #何番目のボムかを番号付きで取得
+            if beam is not None:
+                if beam.rct.colliderect(bomb.rct): #ビームが爆弾を撃ち落としたら
+                    beam = None
+                    bombs[i] = None #i番目をNoneにする
+                    bird.change_img(6, screen) #ビームが当たるとこうかとんが喜ぶ
+                    pg.display.update()
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         # beam.update(screen)
-        if bomb is not None:
+        bombs = [bomb for bomb in bombs if bomb is not None] #Noneでないものリスト
+        for bomb in bombs: #リストにNoneが入っている可能性がある
             bomb.update(screen) #ボムの更新
         #もしbeamがNoneじゃなかったらupdateする
         if beam is not None:
