@@ -106,7 +106,7 @@ class Beam:
         """
         if check_bound(self.rct) == (True, True): #画面の中に入っていたら表示
             self.rct.move_ip(self.vx, self.vy)
-            screen.blit(self.img, self.rct)    
+            screen.blit(self.img, self.rct)   
 
 
 class Bomb:
@@ -161,19 +161,27 @@ def main():
                 beam = Beam(bird)            
         screen.blit(bg_img, [0, 0])
         
-        if bird.rct.colliderect(bomb.rct):
-            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-            bird.change_img(8, screen)
-            pg.display.update()
-            time.sleep(1)
-            return
+        #衝突判定
+        if bomb is not None:
+            if bird.rct.colliderect(bomb.rct):
+                # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                bird.change_img(8, screen)
+                pg.display.update()
+                time.sleep(1)
+                return
+        
+        if beam is not None:
+            if beam.rct.colliderect(bomb.rct):#ビームが爆弾を撃ち落としたら
+                beam = None
+                bomb = None
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        # beam.update(screen)   
-        bomb.update(screen) #ボムの更新
+        # beam.update(screen)
+        if bomb is not None:
+            bomb.update(screen) #ボムの更新
         #もしbeamがNoneじゃなかったらupdateする
-        if beam is None:
+        if beam is not None:
             beam.update(screen) #ここがNoneの時でもupdateされてるからエラー
         #bomb2.update(screen) #こっちで更新が必要
         pg.display.update()
