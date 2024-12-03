@@ -146,6 +146,9 @@ class Score:
     スコア表示に関するクラス
     """
     def __init__(self):
+        """
+        ビームが爆弾に当たった回数を表示させるフォントSurfaceを生成させる
+        """
         self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30) #フォント
         self.color = (0, 0, 255) #文字色の設定
         self.kazu = 0 #スコアの初期値
