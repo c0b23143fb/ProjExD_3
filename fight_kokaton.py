@@ -141,15 +141,36 @@ class Bomb:
         screen.blit(self.img, self.rct)
 
 
+class Score:
+    """
+    スコア表示に関するクラス
+    """
+    def __init__(self):
+        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30) #フォント
+        self.color = (0, 0, 255) #文字色の設定
+        self.kazu = 0 #スコアの初期値
+        self.img = self.fonto.render(f"スコア：{self.kazu}", 0, self.color) #文字列Surface
+        self.ix, self.iy = 100, HEIGHT-50
+
+    def update(self, screen: pg.Surface):
+        """
+        ビームを速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
+        self.img = self.fonto.render(f"スコア：{self.kazu}", 0, self.color)
+        screen.blit(self.img, (self.ix, self.iy))
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200)) #引数がタプル
     bomb = Bomb((255, 0, 0), 10) #ボムクラスのインスタンス
+    score = Score()
     #スペースが押されるまではNone
     beam = None #__init__のselfを無視した引数を書く #ビームインスタンス生成(ビームが一つ完成)
-    #bomb2 = Bomb((0, 0, 255), 20) #これだけでボブが増やせる
+    #bomb2 = Bomb((0, 0, 255), 20) #これだけでボムが増やせる
     bombs = [Bomb((255, 0, 0), 10) for i in range(NUM_OF_BOMBS)] #ボムのリストが5個並ぶ
     clock = pg.time.Clock()
     tmr = 0
@@ -183,6 +204,7 @@ def main():
                     beam = None
                     bombs[i] = None #i番目をNoneにする
                     bird.change_img(6, screen) #ビームが当たるとこうかとんが喜ぶ
+                    score.kazu += 1
                     pg.display.update()
 
         key_lst = pg.key.get_pressed()
@@ -195,6 +217,7 @@ def main():
         if beam is not None:
             beam.update(screen) #ここがNoneの時でもupdateされてるからエラー
         #bomb2.update(screen) #こっちで更新が必要
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
