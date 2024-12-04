@@ -162,6 +162,7 @@ class Score:
 
 
 def main():
+    beam_list = [] #Beamクラスのインスタンスを複数扱うための空のリスト
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
@@ -181,7 +182,8 @@ def main():
             #スペースキーが押されたらビームを出す
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beam = Beam(bird)
+                beam_list.append(beam) #リストに追加         
         screen.blit(bg_img, [0, 0])
         
         #衝突判定
@@ -199,23 +201,33 @@ def main():
         
         #ビームで撃ち落とされると一部がNoneになったリストになる
         for i, bomb in enumerate(bombs): #何番目のボムかを番号付きで取得
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct): #ビームが爆弾を撃ち落としたら
-                    beam = None
-                    bombs[i] = None #i番目をNoneにする
-                    bird.change_img(6, screen) #ビームが当たるとこうかとんが喜ぶ
-                    score.kazu += 1
-                    pg.display.update()
+            for j, beam in enumerate(beam_list): ##何番目のビームかを番号付きで取得
+                if beam_list[j] is not None: #beamのj番目がNoneじゃなかったら
+                    if beam.rct.colliderect(bomb.rct): #ビームが爆弾を撃ち落としたら
+                        bombs[i] = None #i番目をNoneにする
+                        beam_list[j] = None #ビームのj番目をNone
+                        bird.change_img(6, screen) #ビームが当たるとこうかとんが喜ぶ
+                        score.kazu += 1 #スコアを1増やす
+                        pg.display.update()
+                    
+                    print(beam_list)
+                    
+                    if check_bound(beam.rct) != (True, True):
+                        del beam_list[j]
+                    print(beam_list)
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         # beam.update(screen)
         bombs = [bomb for bomb in bombs if bomb is not None] #Noneでないものリスト
+        beam_list = [beam for beam in beam_list if beam is not None] 
         for bomb in bombs: #リストにNoneが入っている可能性がある
             bomb.update(screen) #ボムの更新
+        for beam in beam_list:
+            beam.update(screen) #beamの更新
         #もしbeamがNoneじゃなかったらupdateする
-        if beam is not None:
-            beam.update(screen) #ここがNoneの時でもupdateされてるからエラー
+        # if beam is not None:
+        #     beam.update(screen) #ここがNoneの時でもupdateされてるからエラー
         #bomb2.update(screen) #こっちで更新が必要
         score.update(screen)
         pg.display.update()
