@@ -146,6 +146,9 @@ class Score:
     スコア表示に関するクラス
     """
     def __init__(self):
+        """
+        
+        """
         self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30) #フォント
         self.color = (0, 0, 255) #文字色の設定
         self.kazu = 0 #スコアの初期値
@@ -154,15 +157,43 @@ class Score:
 
     def update(self, screen: pg.Surface):
         """
-        ビームを速度ベクトルself.vx, self.vyに基づき移動させる
+        スコアの更新を行い表示する
         引数 screen：画面Surface
         """
         self.img = self.fonto.render(f"スコア：{self.kazu}", 0, self.color)
         screen.blit(self.img, (self.ix, self.iy))
 
 
+class Explosion:
+    """
+    爆発エフェクトに関するクラス
+    """
+    def __init__(self, x: int, y: int):
+        """
+        爆発の設定
+        引数1：爆弾の中心x座標
+        引数2：爆弾の中心y座標
+        """
+        bg_img = pg.image.load("fig/explosion.gif") 
+        self.bakuhatu = [bg_img, pg.transform.flip(bg_img, True, True)]
+        self.rct = self.bakuhatu[0].get_rect()
+        self.rct.center = (x, y)
+        self.life = 20
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発Surfaceを切り替えて爆発を演出
+        引数 screen：画面Surface
+        """
+        self.life -= 1
+        if (self.life >= 0):
+            for i in range(len(self.bakuhatu)):
+                screen.blit(self.bakuhatu[i], self.rct)
+
+
 def main():
     beam_list = [] #Beamクラスのインスタンスを複数扱うための空のリスト
+    explosion_list = []
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
@@ -204,13 +235,15 @@ def main():
             for j, beam in enumerate(beam_list): ##何番目のビームかを番号付きで取得
                 if beam_list[j] is not None: #beamのj番目がNoneじゃなかったら
                     if beam.rct.colliderect(bomb.rct): #ビームが爆弾を撃ち落としたら
+                        # if explosion.life > 0:
+                        explosion = Explosion(bomb.rct.centerx, bomb.rct.centery)
+                        explosion_list.append(explosion)
                         bombs[i] = None #i番目をNoneにする
                         beam_list[j] = None #ビームのj番目をNone
                         bird.change_img(6, screen) #ビームが当たるとこうかとんが喜ぶ
                         score.kazu += 1 #スコアを1増やす
+                        #explosion.update(screen)
                         pg.display.update()
-                    
-                    print(beam_list)
                     
                     if check_bound(beam.rct) != (True, True):
                         del beam_list[j]
@@ -218,7 +251,7 @@ def main():
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        # beam.update(screen)
+        #beam.update(screen)
         bombs = [bomb for bomb in bombs if bomb is not None] #Noneでないものリスト
         beam_list = [beam for beam in beam_list if beam is not None] 
         for bomb in bombs: #リストにNoneが入っている可能性がある
@@ -227,8 +260,10 @@ def main():
             beam.update(screen) #beamの更新
         #もしbeamがNoneじゃなかったらupdateする
         # if beam is not None:
-        #     beam.update(screen) #ここがNoneの時でもupdateされてるからエラー
+        # beam.update(screen) #ここがNoneの時でもupdateされてるからエラー
         #bomb2.update(screen) #こっちで更新が必要
+        for explosion in explosion_list:
+            explosion.update(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
