@@ -191,6 +191,42 @@ class Explosion:
                 screen.blit(self.bakuhatu[i], self.rct)
 
 
+class Lief:
+    """
+    ライフに関するクラス
+    """
+    def __init__(self):
+        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)  # フォント
+        self.color = (0, 0, 255)  # 文字色の設定
+        self.kokaton_life = 100  # こうかとんのライフを100に設定
+        #当たり続けているとライフが減るのを防ぐ
+        self.ix, self.iy = 100, HEIGHT - 50  # スコアの表示位置
+
+    def check(self, screen: pg.Surface):
+        """
+        ライフを1減らし、ライフが0になったらゲームオーバーを表示する
+        引数 screen：画面Surface
+        """
+        self.kokaton_life -= 1
+
+        if self.kokaton_life <= 0:
+            fonto = pg.font.Font(None, 80)  # フォントを80サイズに設定
+            txt = fonto.render("Game Over", True, (255, 0, 0))  # ゲームオーバーのテキスト
+            screen.blit(txt, [WIDTH // 2 - 150, HEIGHT // 2])  # 画面中央に表示
+            pg.display.update()  # 画面を更新
+            time.sleep(1)  # 1秒間表示
+            return True  # ゲームオーバー
+        return False  # ライフが残っている場合
+
+    def draw_score(self, screen: pg.Surface):
+        """
+        ライフを画面に表示する
+        引数 screen：画面Surface
+        """
+        life_img = self.fonto.render(f"ライフ：{self.kokaton_life}", 0, self.color)
+        screen.blit(life_img, (self.ix, self.iy - 100))  
+
+
 def main():
     beam_list = [] #Beamクラスのインスタンスを複数扱うための空のリスト
     explosion_list = []
@@ -205,6 +241,7 @@ def main():
     #bomb2 = Bomb((0, 0, 255), 20) #これだけでボムが増やせる
     bombs = [Bomb((255, 0, 0), 10) for i in range(NUM_OF_BOMBS)] #ボムのリストが5個並ぶ
     clock = pg.time.Clock()
+    lief = Lief() #lifeクラスのインスタンス
     tmr = 0
     while True:
         for event in pg.event.get():
@@ -218,17 +255,14 @@ def main():
         screen.blit(bg_img, [0, 0])
         
         #衝突判定
-        for bomb in bombs: #1つでもぶつかったらゲームオーバー
+        for bomb in bombs: #1つでもぶつかっsたらゲームオーバー
             if bird.rct.colliderect(bomb.rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                lief.check(screen)  # ライフを減らす
                 bird.change_img(8, screen)
-                #ゲームオーバーの文字を表示
-                fonto = pg.font.Font(None, 80)
-                txt = fonto.render("Game Over", True, (255, 0, 0))
-                screen.blit(txt, [WIDTH//2-150, HEIGHT//2])
-                pg.display.update()
-                time.sleep(1)
-                return
+                
+                if lief.check(screen):  # ライフが0ならゲームオーバー
+                    return
         
         #ビームで撃ち落とされると一部がNoneになったリストになる
         for i, bomb in enumerate(bombs): #何番目のボムかを番号付きで取得
@@ -265,6 +299,7 @@ def main():
         for explosion in explosion_list:
             explosion.update(screen)
         score.update(screen)
+        lief.draw_score(screen)  #ライフを表示
         pg.display.update()
         tmr += 1
         clock.tick(50)
